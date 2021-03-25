@@ -20,6 +20,9 @@ namespace Antymology.Terrain
         /// </summary>
         private static bool _isVisible = true;
 
+        public override string BlockType { get => "Acidic"; }
+
+
         #endregion
 
         #region Methods

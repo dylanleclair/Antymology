@@ -26,6 +26,8 @@ namespace Antymology.Terrain
         /// </summary>
         private Dictionary<byte, double> phermoneDeposits;
 
+        public override string BlockType => "Air";
+
         #endregion
 
         #region Methods

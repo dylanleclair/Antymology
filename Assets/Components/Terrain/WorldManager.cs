@@ -88,8 +88,8 @@ namespace Antymology.Terrain
         /// </summary>
         private void GenerateAnts()
         {
-            GameObject queen = new GameObject("ants");
-            for (int i = 0; i < 20; i++)
+            //GameObject queen = new GameObject("ants");
+            for (int i = 0; i < ConfigurationManager.Instance.Initial_Ant_Number; i++)
             {
                 int xCoord = RNG.Next(0, Blocks.GetLength(0));
                 int zCoord = RNG.Next(0, Blocks.GetLength(2));
@@ -459,7 +459,6 @@ namespace Antymology.Terrain
             // start at top of world, stop at first block that is not air
             for (int i = worldHeight; i > 0; i--)
             {
-                Debug.Log("World height: " + worldHeight);
                 AbstractBlock BlockAtHeight = GetBlock(xCoord, i, zCoord);
 
                 if (BlockAtHeight as AirBlock == null)

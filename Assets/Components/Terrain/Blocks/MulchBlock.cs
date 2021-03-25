@@ -20,6 +20,8 @@ namespace Antymology.Terrain
         /// </summary>
         private static bool _isVisible = true;
 
+        public override string BlockType => "Mulch";
+
         #endregion
 
         #region Methods
