@@ -36,6 +36,13 @@ public class Agent : MonoBehaviour
             Health -= 10;
         }
 
+        // Subtract twice the health if on acidic block
+        if (GetBlockTypeBelow() == "Acidic")
+        {
+            Health -= 10;
+        }
+
+
         Dig();
         // add eating mulch block to restore health 
         // - cannot consume if another ant is on the block
@@ -51,8 +58,10 @@ public class Agent : MonoBehaviour
 
         // A singular queen must exist
 
-        // No new ants can be created during each evaluation phase (can add as many as needed for new generation)
 
+        // No new ants can be created during each evaluation phase (can add as many as needed for new generation)
+        // - evaluation phase is "live" phase between generations where ants are generated
+        // - can add as many then
 
     }
 
@@ -140,6 +149,32 @@ public class Agent : MonoBehaviour
     /// <returns></returns>
     Vector3 CalculateNextPosition()
     {
+        List<Vector3> nextBlockPositions = new List<Vector3>();
+        // gets the current block position
+        Vector3 position = GetCurrentBlockPosition();
+        int x = Mathf.RoundToInt(position.x);
+        int y = Mathf.RoundToInt(position.y);
+        int z = Mathf.RoundToInt(position.z);
+
+
+        // we want to consider 4 directions of movement (forward, back, left, right)
+        // of these, we want to also consider 
+        // - moving down, for up to 2 blocks
+        // - moving up, for up to 2 blocks
+
+
+        // forward
+
+        // backwards
+
+        // left
+
+        // right
+
+        // now take everything, add vertical movement possibilities
+
+        // validate the positions (ie: there is a block to stand on, with air above it)
+
 
         return new Vector3();
     }
