@@ -12,6 +12,8 @@ public class Agent : MonoBehaviour
     /// </summary>
     public int Health { get; set; } = 10000;
 
+    private float moveTimer = 0; 
+
     //public WorldManager world {get;set;}
     private AbstractBlock air = new AirBlock();
     #endregion
@@ -30,7 +32,7 @@ public class Agent : MonoBehaviour
         
         if (Health < 0)
         {
-            Die();
+            //Die();
         } else
         {
             Health -= 10;
@@ -42,8 +44,16 @@ public class Agent : MonoBehaviour
             Health -= 10;
         }
 
+        if (moveTimer > 1)
+        {
+            transform.position = CalculateNextPosition();
+            moveTimer = 0;
+        } else
+        {
+            moveTimer += Time.deltaTime;
+        }
 
-        Dig();
+        //Dig();
         // add eating mulch block to restore health 
         // - cannot consume if another ant is on the block
 
@@ -51,7 +61,7 @@ public class Agent : MonoBehaviour
 
         // ants can dig
         // - CANNOT dig a container block
-        
+
         // if ant on an acidic block, will die 2x faster
 
         // ants may give some of their health to other ants on same space (zero-sum exchange!)
@@ -62,7 +72,7 @@ public class Agent : MonoBehaviour
         // No new ants can be created during each evaluation phase (can add as many as needed for new generation)
         // - evaluation phase is "live" phase between generations where ants are generated
         // - can add as many then
-
+        
     }
 
 
@@ -144,12 +154,42 @@ public class Agent : MonoBehaviour
     }
 
     /// <summary>
+    /// Checks for block type AT specific coordinates
+    /// </summary>
+    /// <param name="position"></param>
+    /// <returns></returns>
+    string GetBlockTypeAt(Vector3 position)
+    {
+        int x = Mathf.RoundToInt(position.x);
+        int y = Mathf.RoundToInt(position.y);
+        int z = Mathf.RoundToInt(position.z);
+        AbstractBlock block = WorldManager.Instance.GetBlock(x, y, z);
+        return block.BlockType;
+    }
+
+    /// <summary>
+    /// Checks for the block type ABOVE the block at specified coordinates
+    /// </summary>
+    /// <param name="position"></param>
+    /// <returns></returns>
+    string GetBlockTypeAbove(Vector3 position)
+    {
+        int x = Mathf.RoundToInt(position.x);
+        int y = Mathf.RoundToInt(position.y + 1);
+        int z = Mathf.RoundToInt(position.z);
+        AbstractBlock block = WorldManager.Instance.GetBlock(x, y, z);
+        return block.BlockType;
+    }
+
+    /// <summary>
     /// Helper for move.
     /// </summary>
     /// <returns></returns>
     Vector3 CalculateNextPosition()
     {
         List<Vector3> nextBlockPositions = new List<Vector3>();
+        List<Vector3> filteredPositions = new List<Vector3>();
+
         // gets the current block position
         Vector3 position = GetCurrentBlockPosition();
         int x = Mathf.RoundToInt(position.x);
@@ -163,20 +203,53 @@ public class Agent : MonoBehaviour
         // - moving up, for up to 2 blocks
 
 
-        // forward
-
+        // forward (consider x as forwards for now)
+        nextBlockPositions.Add(new Vector3(position.x + 1, position.y, position.z));
         // backwards
-
+        nextBlockPositions.Add(new Vector3(position.x - 1, position.y, position.z));
         // left
-
+        nextBlockPositions.Add(new Vector3(position.x, position.y, position.z + 1));
         // right
+        nextBlockPositions.Add(new Vector3(position.x, position.y, position.z - 1));
 
         // now take everything, add vertical movement possibilities
+        int size = nextBlockPositions.Count;
+        for (int i = 0; i < size; i++)
+        {
+            var pos = nextBlockPositions[i];
+            nextBlockPositions.Add(new Vector3(pos.x, pos.y - 2, pos.z)); // move down 2
+            nextBlockPositions.Add(new Vector3(pos.x, pos.y - 1, pos.z)); // move down 1
+            nextBlockPositions.Add(new Vector3(pos.x, pos.y + 1, pos.z)); // move up 1
+            nextBlockPositions.Add(new Vector3(pos.x, pos.y + 2, pos.z)); // move up 2
+        }
 
         // validate the positions (ie: there is a block to stand on, with air above it)
+        foreach (var pos in nextBlockPositions)
+        {
+            // add validated position to filteredPositions
+            if (GetBlockTypeAt(pos) != "Air" && GetBlockTypeAbove(pos) == "Air")
+            {
+                filteredPositions.Add(pos);
+            }
+        }
+
+        if (filteredPositions.Count > 0)
+        {        
+            // pick from filtered positions:
+            int chosenIndex = Random.Range(0, filteredPositions.Count - 1);
+            // add offset so that agent appears to be "on" the surface
+            Vector3 chosenPos = filteredPositions[chosenIndex];
+            chosenPos.y = chosenPos.y +0.75f;
+
+            return chosenPos;
+        } else
+        {
+            return transform.position;
+        }
 
 
-        return new Vector3();
+
+
     }
 
     /// <summary>
