@@ -88,7 +88,18 @@ namespace Antymology.Terrain
         /// </summary>
         private void GenerateAnts()
         {
-            throw new NotImplementedException();
+            GameObject queen = new GameObject("ants");
+            for (int i = 0; i < 20; i++)
+            {
+                int xCoord = RNG.Next(0, Blocks.GetLength(0));
+                int zCoord = RNG.Next(0, Blocks.GetLength(2));
+
+                int yCoord = GetHeightAt(xCoord, zCoord) + 1;
+
+                GameObject g = Instantiate(antPrefab);
+                g.transform.position = new Vector3(xCoord, yCoord, zCoord);
+                g.name = "ant " + i;
+            }
         }
 
         #endregion
@@ -435,5 +446,32 @@ namespace Antymology.Terrain
         #endregion
 
         #endregion
+
+        #region My Helpers
+
+        public int GetHeightAt(int xCoord, int zCoord)
+        {
+
+            // get size of Y dimension
+            int worldHeight = ConfigurationManager.Instance.World_Height * ConfigurationManager.Instance.Chunk_Diameter;
+
+            // start at top of world, stop at first block that is not air
+            for (int i = worldHeight; i > 0; i--)
+            {
+                Debug.Log("World height: " + worldHeight);
+                AbstractBlock BlockAtHeight = GetBlock(xCoord, i, zCoord);
+
+                if (BlockAtHeight as AirBlock == null)
+                {
+                    return i;
+                }
+                
+            }
+
+            return 0;
+        }
+
+        #endregion
+
     }
 }
