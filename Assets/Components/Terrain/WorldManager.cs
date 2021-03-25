@@ -97,7 +97,8 @@ namespace Antymology.Terrain
                 int yCoord = GetHeightAt(xCoord, zCoord) + 1;
 
                 GameObject g = Instantiate(antPrefab);
-                g.transform.position = new Vector3(xCoord, yCoord, zCoord);
+                g.transform.localScale = (new Vector3(0.5f, 0.5f, 0.5f));
+                g.transform.position = new Vector3(xCoord, yCoord -0.25f, zCoord);
                 g.name = "ant " + i;
             }
         }
