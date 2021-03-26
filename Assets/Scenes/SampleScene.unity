@@ -359,10 +359,11 @@ MonoBehaviour:
   queenPrefab: {fileID: 2933225140758105482, guid: b953c4b30b9539049b6c8baef806a6ef,
     type: 3}
   blockMaterial: {fileID: 2100000, guid: 4db9d8fce1a69b74f81daf1375c9ed88, type: 2}
-  layers: 
+  queen: {fileID: 0}
   MutationChance: 0
   MutationStrength: 0
-  Gamespeed: 1
+  Gamespeed: 99
+  ants: []
 --- !u!4 &964896558
 Transform:
   m_ObjectHideFlags: 0
@@ -390,7 +391,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Seed: 1337
-  World_Diameter: 16
+  World_Diameter: 8
   World_Height: 4
   Chunk_Diameter: 8
   Tile_Map_Unit_Ratio: 0.25

@@ -10,21 +10,23 @@ public class Agent : MonoBehaviour
     /// <summary>
     /// Represents the health of an ant
     /// </summary>
-    public int Health { get; set; } = 10000;
+    public int Health { get; set; } = 7000;
 
     public bool Alive { get; set; } = true;
 
     public NeuralNetwork network; 
 
-    private float moveTimer = 0; // makes it so that the ant doesn't just jump around at 30fps
+    public float moveTimer = 0; // makes it so that the ant doesn't just jump around at 30fps
 
     private float timeAlive = 0;
 
-    public const int HealthLostPerTick = 1;
+    public const int HealthLostPerTick = 20;
 
     private AbstractBlock air = new AirBlock();
 
     private float[] input = new float[125 + 11];
+
+    private int HealthShared = 0;
 
     #endregion
 
@@ -44,10 +46,11 @@ public class Agent : MonoBehaviour
             Alive = false;
         } else
         {
-            if (GetBlockTypeBelow() == "Acidic")
-                Health -= 2 * HealthLostPerTick;
-            else
-                Health -= HealthLostPerTick;
+            //if (GetBlockTypeBelow() == "Acidic")
+            //Health -= 2 * HealthLostPerTick;
+            //else
+            //Health -= HealthLostPerTick;
+            Alive = true;
         }
 
 
@@ -133,19 +136,48 @@ public class Agent : MonoBehaviour
             //Debug.Log("Concatenated length: "+ input.Length);
             float[] output = network.FeedForward(input); // call to network to feed forward
 
+            int forward = Mathf.RoundToInt(output[0]);
+            int backward = Mathf.RoundToInt(output[1]);
+            int left = Mathf.RoundToInt(output[2]);
+            int right = Mathf.RoundToInt(output[3]);
+            int toDig = Mathf.RoundToInt(output[4]);
+            int moveUp = Mathf.RoundToInt(output[5]);
+            int moveDown = Mathf.RoundToInt(output[6]);
+            int shareHealth = Mathf.RoundToInt(output[7]);
             // act accordingly
 
+            // first, parse the movement. remember that this is relative to ant's current position. 
+
+            int deltaX = forward - backward;
+            int deltaY = moveUp - moveDown;
+            int deltaZ = left - right;
+
+            position.x += deltaX;
+            position.y += deltaY;
+            position.z += deltaZ;
 
 
-            if (moveTimer > 1)
+            if (toDig == 1)
             {
-                transform.position = CalculateNextPosition();
-                moveTimer = 0;
+                Dig();
             }
-            else
+
+            if (shareHealth == 1)
             {
-                moveTimer += Time.deltaTime;
+                ShareHealth();
             }
+
+            // add support for sharing health
+
+            if (GetBlockTypeAt(position) != "Air" && GetBlockTypeAbove(position) == "Air")
+            {
+                // then the movement is valid!
+                // TODO: add support for jumps of height 2
+                position.y += 0.75f;
+                transform.position = position;
+
+            } // otherwise, stay in the same position
+
 
 
         }
@@ -174,20 +206,12 @@ public class Agent : MonoBehaviour
     }
 
 
-
-    void Die()
-    {
-        Destroy(gameObject);
-    }
-
-
     /// <summary>
     /// Causes the ant to dig
     /// </summary>
     void Dig()
     {
         string typeToDig = GetBlockTypeBelow();
-        Debug.Log("digging " + typeToDig);
         // do not "dig" mulch blocks
         if (typeToDig != "Container")
         {
@@ -268,7 +292,7 @@ public class Agent : MonoBehaviour
     /// Helper for move.
     /// </summary>
     /// <returns></returns>
-    Vector3 CalculateNextPosition()
+    public Vector3 CalculateNextPosition()
     {
         List<Vector3> nextBlockPositions = new List<Vector3>();
         List<Vector3> filteredPositions = new List<Vector3>();
@@ -363,6 +387,12 @@ public class Agent : MonoBehaviour
         // find an ant with same position
         // subtract health from this ant
         // add health to other ant
+        if (Vector3.Distance(GetCurrentBlockPosition(),WorldManager.Instance.queen.GetCurrentBlockPosition()) < 3)
+        {
+            this.Health -= 100;
+            WorldManager.Instance.queen.Health += 100;
+            HealthShared += 100;
+        }
     }
 
 
@@ -391,6 +421,11 @@ public class Agent : MonoBehaviour
     // this is the fitness function!
     public void UpdateFitness()
     {
-        network.fitness = timeAlive; //updates fitness of network for sorting
+
+        Vector3 distanceFromQueen = WorldManager.Instance.queen.GetCurrentBlockPosition();
+
+        int dist = Mathf.RoundToInt(Vector3.Distance(distanceFromQueen, GetCurrentBlockPosition()));
+
+        network.fitness = (10000 - dist) + 900 * HealthShared; //updates fitness of network for sorting
     }
 }

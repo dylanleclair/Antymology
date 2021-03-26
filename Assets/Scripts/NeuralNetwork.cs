@@ -101,7 +101,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public float activate(float value)
     {
-        return (float)Math.Tanh(value);
+        return (float)LogSigmoid(value);
     }
 
     public void Mutate(int chance, float val)//used as a simple mutation function for any genetic implementations.
@@ -220,5 +220,13 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
             }
         }
         writer.Close();
+    }
+
+
+    public double LogSigmoid(double x)
+    {
+        if (x < -45.0) return 0.0;
+        else if (x > 45.0) return 1.0;
+        else return 1.0 / (1.0 + Math.Exp(-x));
     }
 }

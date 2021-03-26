@@ -8,7 +8,7 @@ public class Queen : Agent
     // Start is called before the first frame update
     void Start()
     {
-        
+        Health = 2000;
     }
 
     // Update is called once per frame
@@ -24,13 +24,31 @@ public class Queen : Agent
             if (GetBlockTypeBelow() == "Acidic")
                 Health -= 2 * HealthLostPerTick;
             else
-                Health -= HealthLostPerTick;
+                Health -= 2 * HealthLostPerTick;
         }
 
         if (!Alive)
         {
             // start the next generation if the queen dies!
+            WorldManager.Instance.GenerateData();
+            WorldManager.Instance.GenerateChunks();
             WorldManager.Instance.GenerateAnts();
+            
+        } else
+        {
+
+            if (moveTimer > 2)
+            {
+                moveTimer = 0;
+                // move around & try to run into another ant
+                this.transform.position = CalculateNextPosition();
+
+            } else
+            {
+                moveTimer += Time.deltaTime;
+            }
+
+
         }
         
     }

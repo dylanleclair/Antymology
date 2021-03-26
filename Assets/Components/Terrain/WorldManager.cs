@@ -17,6 +17,9 @@ namespace Antymology.Terrain
         public GameObject antPrefab;
 
         public GameObject queenPrefab;
+
+        GameObject chunkObg;
+
         /// <summary>
         /// The material used for eech block.
         /// </summary>
@@ -94,13 +97,13 @@ namespace Antymology.Terrain
         #region simp for the queen
 
         // this is ugly I know
-        private int[] layers = new int[3] {136, 40, 7 };
+        private int[] layers = new int[3] {136, 12, 8 };
 
         [Range(0.0001f, 1f)] public float MutationChance = 0.01f;
 
         [Range(0f, 1f)] public float MutationStrength = 0.5f;
 
-        [Range(0.1f, 10f)] public float Gamespeed = 1f;
+        [Range(0.1f, 100f)] public float Gamespeed = 1f;
 
         public List<NeuralNetwork> networks;
         public List<Agent> ants = null;
@@ -111,7 +114,7 @@ namespace Antymology.Terrain
             for (int i = 0; i < ConfigurationManager.Instance.GenerationSize; i++)
             {
                 NeuralNetwork net = new NeuralNetwork(layers);
-                //net.Load("Assets/Pre-trained.txt");//on start load the network save
+                //net.Load("Assets/Save.txt");//on start load the network save
                 networks.Add(net);
             }
         }
@@ -330,7 +333,7 @@ namespace Antymology.Terrain
         /// <summary>
         /// Is responsible for generating the base, acid, and spheres.
         /// </summary>
-        private void GenerateData()
+        public void GenerateData()
         {
             GeneratePreliminaryWorld();
             GenerateAcidicRegions();
@@ -510,9 +513,14 @@ namespace Antymology.Terrain
         /// <summary>
         /// Takes the world data and generates the associated chunk objects.
         /// </summary>
-        private void GenerateChunks()
+        public void GenerateChunks()
         {
-            GameObject chunkObg = new GameObject("Chunks");
+            if (chunkObg != null)
+            {
+                Destroy(chunkObg);
+            }
+
+            chunkObg = new GameObject("Chunks");
 
             for (int x = 0; x < Chunks.GetLength(0); x++)
                 for (int z = 0; z < Chunks.GetLength(2); z++)
