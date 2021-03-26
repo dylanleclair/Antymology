@@ -114,7 +114,7 @@ namespace Antymology.Terrain
             for (int i = 0; i < ConfigurationManager.Instance.GenerationSize; i++)
             {
                 NeuralNetwork net = new NeuralNetwork(layers);
-                //net.Load("Assets/Save.txt");//on start load the network save
+                net.Load("Assets/Save.txt");//on start load the network save
                 networks.Add(net);
             }
         }
@@ -146,8 +146,8 @@ namespace Antymology.Terrain
             for (int i = 0; i < ConfigurationManager.Instance.GenerationSize; i++)
             {
                 
-                int xCoord = RNG.Next(0, Blocks.GetLength(0));
-                int zCoord = RNG.Next(0, Blocks.GetLength(2));
+                int xCoord = RNG.Next(1, Blocks.GetLength(0) -1);
+                int zCoord = RNG.Next(1, Blocks.GetLength(2) -1);
 
                 int yCoord = GetHeightAt(xCoord, zCoord) + 1;
 
@@ -165,8 +165,8 @@ namespace Antymology.Terrain
 
             Debug.Log(ants.Count);
 
-            int xC = RNG.Next(0, Blocks.GetLength(0));
-            int zC = RNG.Next(0, Blocks.GetLength(2));
+            int xC = RNG.Next(1, Blocks.GetLength(0)-1);
+            int zC = RNG.Next(1, Blocks.GetLength(2)-1);
             int yC = GetHeightAt(xC, zC) + 1;
             GameObject q = Instantiate(queenPrefab); // make the queen!
             q.transform.localScale = (new Vector3(0.5f, 0.5f, 0.5f));

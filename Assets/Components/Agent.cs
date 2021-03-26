@@ -18,7 +18,6 @@ public class Agent : MonoBehaviour
 
     public float moveTimer = 0; // makes it so that the ant doesn't just jump around at 30fps
 
-    private float timeAlive = 0;
 
     public const int HealthLostPerTick = 20;
 
@@ -27,6 +26,8 @@ public class Agent : MonoBehaviour
     private float[] input = new float[125 + 11];
 
     private int HealthShared = 0;
+
+    private int MovedTowardsQueen = 0;
 
     #endregion
 
@@ -58,6 +59,8 @@ public class Agent : MonoBehaviour
 
         if (Alive)
         {
+
+
             // gather the inputs to the neural network
 
             // gather the terrain data near the ant
@@ -116,6 +119,9 @@ public class Agent : MonoBehaviour
             Vector3 thisPos = GetCurrentBlockPosition();
             // encode directions of queen and closest ant
 
+            float initialDistance = Vector3.Distance(queenPos, thisPos);
+
+
             // should x be lower, equal or same?
             queenX = comparePos(queenPos.x, thisPos.x);
             closestX = comparePos(posClosest.x, thisPos.x);
@@ -167,18 +173,37 @@ public class Agent : MonoBehaviour
                 ShareHealth();
             }
 
-            // add support for sharing health
+            // add support for sharing 
 
             if (GetBlockTypeAt(position) != "Air" && GetBlockTypeAbove(position) == "Air")
             {
+
+                
                 // then the movement is valid!
-                // TODO: add support for jumps of height 2
                 position.y += 0.75f;
                 transform.position = position;
 
-            } // otherwise, stay in the same position
+            } else // support for jumps of height 2
+            {
+                // add an extra delta in Y
+                position.y += deltaY;
+                if (GetBlockTypeAt(position) != "Air" && GetBlockTypeAbove(position) == "Air")
+                {
+                    position.y += 0.75f;
+                    transform.position = position;
+                }
+            }
+
+            float finalDistance = Vector3.Distance(WorldManager.Instance.queen.GetCurrentBlockPosition(), GetCurrentBlockPosition());
 
 
+            if (finalDistance < initialDistance)
+            {
+                MovedTowardsQueen += 1;
+            } else
+            {
+                MovedTowardsQueen -= 1;
+            }
 
         }
 
@@ -235,7 +260,7 @@ public class Agent : MonoBehaviour
     }
 
     // These two were borrowed from the UITerrain editor. 
-    void SetBlockAt(Vector3 position, AbstractBlock block)
+    public void SetBlockAt(Vector3 position, AbstractBlock block)
     {
         int x = Mathf.RoundToInt(position.x);
         int y = Mathf.RoundToInt(position.y);
@@ -384,15 +409,41 @@ public class Agent : MonoBehaviour
 
     void ShareHealth()
     {
+        int ShareAmount = 1000;
         // find an ant with same position
         // subtract health from this ant
         // add health to other ant
         if (Vector3.Distance(GetCurrentBlockPosition(),WorldManager.Instance.queen.GetCurrentBlockPosition()) < 3)
         {
-            this.Health -= 100;
-            WorldManager.Instance.queen.Health += 100;
-            HealthShared += 100;
+            this.Health -= ShareAmount;
+            WorldManager.Instance.queen.Health += ShareAmount;
+            HealthShared += ShareAmount;
+        } else
+        {
+            Agent closestAnt = null;
+            float distance = 10000000;
+            // find the closest ant
+            List<Agent> ants = WorldManager.Instance.ants;
+            for (int i = 0; i< ants.Count; i++)
+            {
+                float antDistance = Vector3.Distance(GetCurrentBlockPosition(), ants[i].GetCurrentBlockPosition());
+                if (antDistance < distance)
+                {
+                    distance = antDistance;
+                    closestAnt = ants[i];
+                }
+            }
+
+            if (distance < 5)
+            {
+                this.Health -= ShareAmount;
+                closestAnt.Health += ShareAmount;
+            }
+
+
         }
+
+
     }
 
 
@@ -426,6 +477,6 @@ public class Agent : MonoBehaviour
 
         int dist = Mathf.RoundToInt(Vector3.Distance(distanceFromQueen, GetCurrentBlockPosition()));
 
-        network.fitness = (10000 - dist) + 900 * HealthShared; //updates fitness of network for sorting
+        network.fitness = MovedTowardsQueen + HealthShared / 2 + (50 * WorldManager.Instance.queen.NestBlocksBuilt); //updates fitness of network for sorting
     }
 }

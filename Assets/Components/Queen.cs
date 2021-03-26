@@ -5,10 +5,14 @@ using UnityEngine;
 
 public class Queen : Agent
 {
+    public int MaxHealth = 10000;
+    public AbstractBlock Nest = new NestBlock();
+    public float BuildTimer = 0;
+    public int NestBlocksBuilt = 0;
     // Start is called before the first frame update
     void Start()
     {
-        Health = 2000;
+        Health = 5000;
     }
 
     // Update is called once per frame
@@ -24,7 +28,7 @@ public class Queen : Agent
             if (GetBlockTypeBelow() == "Acidic")
                 Health -= 2 * HealthLostPerTick;
             else
-                Health -= 2 * HealthLostPerTick;
+                Health -= HealthLostPerTick;
         }
 
         if (!Alive)
@@ -47,6 +51,35 @@ public class Queen : Agent
             {
                 moveTimer += Time.deltaTime;
             }
+
+            if (BuildTimer > 4)
+            {
+                
+                if (Health > 200)
+                {
+                    NestBlocksBuilt++;
+                    // place a nest block at position
+                    Vector3 pos = GetCurrentBlockPosition();
+                    pos.y += 1; // add one, since we want it to create the block WHERE it is, not block under it
+                    SetBlockAt(pos, Nest);
+
+
+                    transform.position = new Vector3(
+                        transform.position.x,
+                        transform.position.y + 1.0f,
+                        transform.position.z);
+
+                    Health = Mathf.RoundToInt(Health * 0.67f); // lose 33% of health
+                }
+
+                BuildTimer = 0;
+
+            } else
+            {
+                BuildTimer += Time.deltaTime;
+            }
+
+
 
 
         }

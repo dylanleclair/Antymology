@@ -392,13 +392,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Seed: 1337
   World_Diameter: 8
-  World_Height: 4
+  World_Height: 8
   Chunk_Diameter: 8
   Tile_Map_Unit_Ratio: 0.25
   Number_Of_Acidic_Regions: 10
   Acidic_Region_Radius: 5
   Number_Of_Conatiner_Spheres: 5
   Conatiner_Sphere_Radius: 10
-  GenerationSize: 20
+  GenerationSize: 60
   AntChunkRadius: 7
   InternalLayers: 2
