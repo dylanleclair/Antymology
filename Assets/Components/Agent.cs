@@ -10,7 +10,7 @@ public class Agent : MonoBehaviour
     /// <summary>
     /// Represents the health of an ant
     /// </summary>
-    public int Health { get; set; } = 1000;
+    public int Health { get; set; } = 10000;
 
     public bool Alive { get; set; } = true;
 
@@ -24,7 +24,7 @@ public class Agent : MonoBehaviour
 
     private AbstractBlock air = new AirBlock();
 
-    private float[] input = new float[125 + 4];
+    private float[] input = new float[125 + 11];
 
     #endregion
 
@@ -67,10 +67,10 @@ public class Agent : MonoBehaviour
             int[,,] blocks = new int[5,5,5];
             for (int i = 0; i< 5; i++)
             {
-                int xblock = x - 2;
+                int xblock = x - 2 + i;
                 for (int j = 0; j < 5; j++)
                 {
-                    int yblock = y - 2;
+                    int yblock = y - 2 + j;
                     for (int k = 0; k<5; k++)
                     {
                         int zblock = z - 2 + k;
@@ -79,9 +79,59 @@ public class Agent : MonoBehaviour
                 }
             }
 
+            // flatten blocks!
+            int[] blocks1d = Flattener.Flatten<int>(blocks);
+            //Debug.Log("LENGTH OF BLOCK BUFFER: " + blocks1d.Length);
+            // get the other values
 
+            // distance to the queen:
+            int distanceFromQueen = 1000000;
+            // health of the queen
+            int healthQueen = WorldManager.Instance.queen.Health;
+
+            // health of closest ant
+            int healthClosestAnt = 0;
+            // distance of closest ant
+            int distanceAnt = 1000000;
+            Vector3 posClosest = new Vector3();
+            // actually set closest ant distance and health
+            List<Agent> ants = WorldManager.Instance.ants;
+            for (int i = 0; i < ants.Count; i++)
+            {
+                int dist = Mathf.RoundToInt(Vector3.Distance(this.transform.position, ants[i].transform.position));
+                if (dist < distanceAnt)
+                {
+                    distanceAnt = dist;
+                    healthClosestAnt = ants[i].Health;
+                    posClosest = ants[i].GetCurrentBlockPosition();
+                }
+            }
+
+            int queenX, queenY, queenZ, closestX, closestY, closestZ;
+
+            Vector3 queenPos = WorldManager.Instance.queen.GetCurrentBlockPosition();
+            Vector3 thisPos = GetCurrentBlockPosition();
+            // encode directions of queen and closest ant
+
+            // should x be lower, equal or same?
+            queenX = comparePos(queenPos.x, thisPos.x);
+            closestX = comparePos(posClosest.x, thisPos.x);
+            // should y be lower, equal or same?
+            queenY = comparePos(queenPos.y, thisPos.y);
+            closestY = comparePos(posClosest.y, thisPos.y);
+            // should z be lower, equal or same?
+            queenZ = comparePos(queenPos.z, thisPos.z);
+            closestZ = comparePos(posClosest.z, thisPos.z);
+
+            // combine into input
+
+            int[] secondary = { queenX, queenY, queenZ, healthQueen, distanceFromQueen, closestX, closestY, closestZ, healthClosestAnt, distanceAnt, Health };
+            //Debug.Log("Length of other variables " +secondary.Length);
             // get output from the neural network
 
+            input = System.Array.ConvertAll(blocks1d.Concatenate(secondary), l=> (float)l);
+            //Debug.Log("Concatenated length: "+ input.Length);
+            float[] output = network.FeedForward(input); // call to network to feed forward
 
             // act accordingly
 
@@ -119,7 +169,10 @@ public class Agent : MonoBehaviour
         // - evaluation phase is "live" phase between generations where ants are generated
         // - can add as many then
 
+        
+
     }
+
 
 
     void Die()
@@ -173,7 +226,7 @@ public class Agent : MonoBehaviour
 
 
     // Gets the type of block currently below an agent. 
-    string GetBlockTypeBelow()
+    public string GetBlockTypeBelow()
     {
         Vector3 position = GetCurrentBlockPosition();
         int x = Mathf.RoundToInt(position.x);
@@ -282,11 +335,22 @@ public class Agent : MonoBehaviour
 
     }
 
+
+    int comparePos (float a, float b)
+    {
+        if (a > b)
+            return 1;
+        else if (a == b)
+            return 0;
+        else
+            return -1;
+    }
+
     /// <summary>
     /// Gets the position that an ant is currently ON TOP OF. 
     /// </summary>
     /// <returns></returns>
-    Vector3 GetCurrentBlockPosition()
+    public Vector3 GetCurrentBlockPosition()
     {
         Vector3 pos = this.transform.position;
         pos.y = Mathf.Floor(pos.y);

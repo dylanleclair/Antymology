@@ -43,7 +43,7 @@ namespace Antymology.Terrain
         private SimplexNoise SimplexNoise;
 
 
-        private Queen queen;
+        public Queen queen;
         #endregion
 
         #region Initialization
@@ -94,7 +94,7 @@ namespace Antymology.Terrain
         #region simp for the queen
 
         // this is ugly I know
-        public int[] layers = new int[3] {125 + 4, 3, 7 };
+        private int[] layers = new int[3] {136, 40, 7 };
 
         [Range(0.0001f, 1f)] public float MutationChance = 0.01f;
 
@@ -103,7 +103,7 @@ namespace Antymology.Terrain
         [Range(0.1f, 10f)] public float Gamespeed = 1f;
 
         public List<NeuralNetwork> networks;
-        private List<Agent> ants;
+        public List<Agent> ants = null;
 
         public void InitNetworks()
         {
@@ -124,15 +124,17 @@ namespace Antymology.Terrain
         public void GenerateAnts()
         {
             Time.timeScale = Gamespeed;
-
-            if (ants != null)
+            
+            if (ants.Count > 0)
             {
+                Debug.Log("New generation!");
                 for (int i = 0; i < ants.Count; i++)
                 {
                     Destroy(ants[i].gameObject);
+                    Destroy(queen.gameObject);
                 }
 
-                SortNetworks();
+                SortNetworks(); // sorts the neural networks and performs genetic mutation
             }
 
             ants = new List<Agent>();
@@ -140,7 +142,7 @@ namespace Antymology.Terrain
             //GameObject queen = new GameObject("ants");
             for (int i = 0; i < ConfigurationManager.Instance.GenerationSize; i++)
             {
-                Debug.Log("WHAT");
+                
                 int xCoord = RNG.Next(0, Blocks.GetLength(0));
                 int zCoord = RNG.Next(0, Blocks.GetLength(2));
 
@@ -154,10 +156,11 @@ namespace Antymology.Terrain
 
                 // get the agent!
                 Agent agent = g.GetComponent<Agent>();
+                agent.network = networks[i];
                 ants.Add(agent);
-
-                // TODO: Add special reference for the queen, since must reset when this happens. 
             }
+
+            Debug.Log(ants.Count);
 
             int xC = RNG.Next(0, Blocks.GetLength(0));
             int zC = RNG.Next(0, Blocks.GetLength(2));

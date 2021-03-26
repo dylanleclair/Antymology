@@ -14,6 +14,19 @@ public class Queen : Agent
     // Update is called once per frame
     void Update()
     {
+
+        if (Health < 0)
+        {
+            Alive = false;
+        }
+        else
+        {
+            if (GetBlockTypeBelow() == "Acidic")
+                Health -= 2 * HealthLostPerTick;
+            else
+                Health -= HealthLostPerTick;
+        }
+
         if (!Alive)
         {
             // start the next generation if the queen dies!
