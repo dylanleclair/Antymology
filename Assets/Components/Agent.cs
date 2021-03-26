@@ -10,18 +10,27 @@ public class Agent : MonoBehaviour
     /// <summary>
     /// Represents the health of an ant
     /// </summary>
-    public int Health { get; set; } = 10000;
+    public int Health { get; set; } = 1000;
 
-    private float moveTimer = 0; 
+    public bool Alive { get; set; } = true;
 
-    //public WorldManager world {get;set;}
+    public NeuralNetwork network; 
+
+    private float moveTimer = 0; // makes it so that the ant doesn't just jump around at 30fps
+
+    private float timeAlive = 0;
+
+    public const int HealthLostPerTick = 1;
+
     private AbstractBlock air = new AirBlock();
+
+    private float[] input = new float[125 + 4];
+
     #endregion
 
     // Start is called before the first frame update
     void Start()
     {
-        //world = GameObject.FindGameObjectWithTag("GameController").GetComponent<WorldManager>();
         
     }
 
@@ -32,28 +41,65 @@ public class Agent : MonoBehaviour
         
         if (Health < 0)
         {
-            //Die();
+            Alive = false;
         } else
         {
-            Health -= 10;
+            if (GetBlockTypeBelow() == "Acidic")
+                Health -= 2 * HealthLostPerTick;
+            else
+                Health -= HealthLostPerTick;
         }
 
-        // Subtract twice the health if on acidic block
-        if (GetBlockTypeBelow() == "Acidic")
+
+
+
+        if (Alive)
         {
-            Health -= 10;
+            // gather the inputs to the neural network
+
+            // gather the terrain data near the ant
+            Vector3 position = GetCurrentBlockPosition();
+            int x = Mathf.RoundToInt(position.x);
+            int y = Mathf.RoundToInt(position.y + 1);
+            int z = Mathf.RoundToInt(position.z);
+
+            // we are going to get the 3d terrain around the ant :) 
+            int[,,] blocks = new int[5,5,5];
+            for (int i = 0; i< 5; i++)
+            {
+                int xblock = x - 2;
+                for (int j = 0; j < 5; j++)
+                {
+                    int yblock = y - 2;
+                    for (int k = 0; k<5; k++)
+                    {
+                        int zblock = z - 2 + k;
+                        blocks[i, j, k] = GetBlockTypeInt(WorldManager.Instance.GetBlock(xblock, yblock, zblock).BlockType);
+                    }
+                }
+            }
+
+
+            // get output from the neural network
+
+
+            // act accordingly
+
+
+
+            if (moveTimer > 1)
+            {
+                transform.position = CalculateNextPosition();
+                moveTimer = 0;
+            }
+            else
+            {
+                moveTimer += Time.deltaTime;
+            }
+
+
         }
 
-        if (moveTimer > 1)
-        {
-            transform.position = CalculateNextPosition();
-            moveTimer = 0;
-        } else
-        {
-            moveTimer += Time.deltaTime;
-        }
-
-        //Dig();
         // add eating mulch block to restore health 
         // - cannot consume if another ant is on the block
 
@@ -72,7 +118,7 @@ public class Agent : MonoBehaviour
         // No new ants can be created during each evaluation phase (can add as many as needed for new generation)
         // - evaluation phase is "live" phase between generations where ants are generated
         // - can add as many then
-        
+
     }
 
 
@@ -102,30 +148,14 @@ public class Agent : MonoBehaviour
                 transform.position.y - 1.0f,
                 transform.position.z);
 
+            // if it was mulch, replenish health
+            if (typeToDig == "Mulch")
+            {
+                Health += 1000;
+            }
+
         } 
     }
-
-    /// <summary>
-    /// A special case of dig
-    /// </summary>
-    void Consume()
-    {
-        string typeToDig = GetBlockTypeBelow();
-        // do not "dig" mulch blocks
-        if (typeToDig == "Mulch")
-        {
-            // if the block is not a container, replace it with air. 
-            Vector3 pos = GetCurrentBlockPosition();
-            SetBlockAt(pos, air);
-
-            transform.position = new Vector3(
-                transform.position.x,
-                transform.position.y - 1.0f,
-                transform.position.z);
-
-        }
-    }
-
 
     // These two were borrowed from the UITerrain editor. 
     void SetBlockAt(Vector3 position, AbstractBlock block)
@@ -264,5 +294,39 @@ public class Agent : MonoBehaviour
 
     }
 
+    void ShareHealth()
+    {
+        // find an ant with same position
+        // subtract health from this ant
+        // add health to other ant
+    }
 
+
+    int GetBlockTypeInt(string block)
+    {
+        switch (block)
+        {
+            case ("Acidic"):
+                return 0;
+            case ("Air"):
+                return 1;
+            case ("Container"):
+                return 2;
+            case ("Grass"):
+                return 3;
+            case ("Mulch"):
+                return 4;
+            case ("Nest"):
+                return 6;
+            case ("Stone"):
+                return 7;
+            default: return 8;
+        }
+    }
+
+    // this is the fitness function!
+    public void UpdateFitness()
+    {
+        network.fitness = timeAlive; //updates fitness of network for sorting
+    }
 }

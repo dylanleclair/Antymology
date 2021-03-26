@@ -354,9 +354,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbd0fdbaf66dc1a4488d999aa299645f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  antPrefab: {fileID: 5116837635226181919, guid: 6ee8f06535974f14bb7c2f397d43e47f,
+  antPrefab: {fileID: 4966110867960486585, guid: e24b289e3a782e644b980655c3708c5e,
+    type: 3}
+  queenPrefab: {fileID: 2933225140758105482, guid: b953c4b30b9539049b6c8baef806a6ef,
     type: 3}
   blockMaterial: {fileID: 2100000, guid: 4db9d8fce1a69b74f81daf1375c9ed88, type: 2}
+  layers: 
+  MutationChance: 0
+  MutationStrength: 0
+  Gamespeed: 1
 --- !u!4 &964896558
 Transform:
   m_ObjectHideFlags: 0
@@ -392,4 +398,6 @@ MonoBehaviour:
   Acidic_Region_Radius: 5
   Number_Of_Conatiner_Spheres: 5
   Conatiner_Sphere_Radius: 10
-  Initial_Ant_Number: 20
+  GenerationSize: 20
+  AntChunkRadius: 7
+  InternalLayers: 2

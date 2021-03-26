@@ -53,5 +53,16 @@ public class ConfigurationManager : Singleton<ConfigurationManager>
     /// <summary>
     /// The number of ants spawned at the start of a simulation
     /// </summary>
-    public int Initial_Ant_Number = 10;
+
+
+    public int GenerationSize = 20;
+
+    public int AntChunkRadius = 5;
+
+    public const int OUTPUT_NODES = 7;
+
+    public int InternalLayers = 3;
+
+
+
 }

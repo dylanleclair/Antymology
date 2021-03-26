@@ -16,6 +16,7 @@ namespace Antymology.Terrain
         /// </summary>
         public GameObject antPrefab;
 
+        public GameObject queenPrefab;
         /// <summary>
         /// The material used for eech block.
         /// </summary>
@@ -41,6 +42,8 @@ namespace Antymology.Terrain
         /// </summary>
         private SimplexNoise SimplexNoise;
 
+
+        private Queen queen;
         #endregion
 
         #region Initialization
@@ -80,28 +83,114 @@ namespace Antymology.Terrain
             Camera.main.transform.position = new Vector3(0 / 2, Blocks.GetLength(1), 0);
             Camera.main.transform.LookAt(new Vector3(Blocks.GetLength(0), 0, Blocks.GetLength(2)));
 
+            InitNetworks();
             GenerateAnts();
+
+
         }
+
+
+
+        #region simp for the queen
+
+        // this is ugly I know
+        public int[] layers = new int[3] {125 + 4, 3, 7 };
+
+        [Range(0.0001f, 1f)] public float MutationChance = 0.01f;
+
+        [Range(0f, 1f)] public float MutationStrength = 0.5f;
+
+        [Range(0.1f, 10f)] public float Gamespeed = 1f;
+
+        public List<NeuralNetwork> networks;
+        private List<Agent> ants;
+
+        public void InitNetworks()
+        {
+            networks = new List<NeuralNetwork>();
+            for (int i = 0; i < ConfigurationManager.Instance.GenerationSize; i++)
+            {
+                NeuralNetwork net = new NeuralNetwork(layers);
+                //net.Load("Assets/Pre-trained.txt");//on start load the network save
+                networks.Add(net);
+            }
+        }
+
+
 
         /// <summary>
         /// TO BE IMPLEMENTED BY YOU
         /// </summary>
-        private void GenerateAnts()
+        public void GenerateAnts()
         {
-            //GameObject queen = new GameObject("ants");
-            for (int i = 0; i < ConfigurationManager.Instance.Initial_Ant_Number; i++)
+            Time.timeScale = Gamespeed;
+
+            if (ants != null)
             {
+                for (int i = 0; i < ants.Count; i++)
+                {
+                    Destroy(ants[i].gameObject);
+                }
+
+                SortNetworks();
+            }
+
+            ants = new List<Agent>();
+
+            //GameObject queen = new GameObject("ants");
+            for (int i = 0; i < ConfigurationManager.Instance.GenerationSize; i++)
+            {
+                Debug.Log("WHAT");
                 int xCoord = RNG.Next(0, Blocks.GetLength(0));
                 int zCoord = RNG.Next(0, Blocks.GetLength(2));
 
                 int yCoord = GetHeightAt(xCoord, zCoord) + 1;
 
+
                 GameObject g = Instantiate(antPrefab);
                 g.transform.localScale = (new Vector3(0.5f, 0.5f, 0.5f));
                 g.transform.position = new Vector3(xCoord, yCoord -0.25f, zCoord);
                 g.name = "ant " + i;
+
+                // get the agent!
+                Agent agent = g.GetComponent<Agent>();
+                ants.Add(agent);
+
+                // TODO: Add special reference for the queen, since must reset when this happens. 
+            }
+
+            int xC = RNG.Next(0, Blocks.GetLength(0));
+            int zC = RNG.Next(0, Blocks.GetLength(2));
+            int yC = GetHeightAt(xC, zC) + 1;
+            GameObject q = Instantiate(queenPrefab); // make the queen!
+            q.transform.localScale = (new Vector3(0.5f, 0.5f, 0.5f));
+            q.transform.position = new Vector3(xC, yC - 0.25f, zC);
+            q.name = "Queen";
+            
+            queen = q.GetComponent<Queen>();
+        }
+
+
+        public void SortNetworks()
+        {
+            int populationSize = ConfigurationManager.Instance.GenerationSize;
+            for (int i = 0; i < populationSize; i++)
+            {
+                ants[i].UpdateFitness();//gets bots to set their corrosponding networks fitness
+            }
+            networks.Sort();
+            networks[populationSize - 1].Save("Assets/Save.txt");//saves networks weights and biases to file, to preserve network performance
+            for (int i = 0; i < populationSize / 2; i++)
+            {
+                networks[i] = networks[i + populationSize / 2].copy(new NeuralNetwork(layers));
+                networks[i].Mutate((int)(1 / MutationChance), MutationStrength);
             }
         }
+
+
+
+
+        #endregion
 
         #endregion
 
