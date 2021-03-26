@@ -29,6 +29,7 @@ public class Agent : MonoBehaviour
 
     private int MovedTowardsQueen = 0;
 
+    
     #endregion
 
     // Start is called before the first frame update
@@ -417,7 +418,7 @@ public class Agent : MonoBehaviour
         {
             this.Health -= ShareAmount;
             WorldManager.Instance.queen.Health += ShareAmount;
-            HealthShared += ShareAmount;
+            HealthShared += 1;
         } else
         {
             Agent closestAnt = null;
@@ -477,6 +478,6 @@ public class Agent : MonoBehaviour
 
         int dist = Mathf.RoundToInt(Vector3.Distance(distanceFromQueen, GetCurrentBlockPosition()));
 
-        network.fitness = MovedTowardsQueen + HealthShared / 2 + (50 * WorldManager.Instance.queen.NestBlocksBuilt); //updates fitness of network for sorting
+        network.fitness = MovedTowardsQueen + HealthShared; //updates fitness of network for sorting
     }
 }

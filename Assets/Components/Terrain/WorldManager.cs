@@ -114,7 +114,7 @@ namespace Antymology.Terrain
             for (int i = 0; i < ConfigurationManager.Instance.GenerationSize; i++)
             {
                 NeuralNetwork net = new NeuralNetwork(layers);
-                net.Load("Assets/Save.txt");//on start load the network save
+                //net.Load("Assets/Save.txt");//on start load the network save
                 networks.Add(net);
             }
         }
