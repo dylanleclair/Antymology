@@ -89,7 +89,9 @@ I should add as a note here that my ants never really got that smart - I don't h
 One big pattern that emerged across the generations, though, is that the ants usually all defaulted to the same strategy: 
 
 - Find a 'good' direction - the ants would usually choose one direction that they would inevitably all proceed over.  
+![](project-images/sample1.gif)
 - In some cases, the ants would stop just before reaching the nest / the queen (as pictured). This was especially common when the queen had started building the nest near a wall in the direction that the ants had started to mostly move in. 
+![](project-images/pause.JPG)
 - In earlier stages, the ants would move in a mix of directions - sometimes moving towards the queen! (this was mostly a coincidence of the queen being in the right place, though) but this behaviour was eventually filtered out as there seemed to be a more agreed upon 'good' direction.
 
 ### Conclusion
