@@ -9,6 +9,8 @@ public class Queen : Agent
     public AbstractBlock Nest = new NestBlock();
     public float BuildTimer = 0;
     public int NestBlocksBuilt = 0;
+    public float DigTimer = 0;
+    public NeuralNetwork queenNetwork;
     // Start is called before the first frame update
     void Start()
     {
@@ -47,14 +49,8 @@ public class Queen : Agent
                 // move around & try to run into another ant
                 this.transform.position = CalculateNextPosition();
 
-            } else
+            } else if (BuildTimer > 4)
             {
-                moveTimer += Time.deltaTime;
-            }
-
-            if (BuildTimer > 4)
-            {
-                
                 if (Health > 200)
                 {
                     NestBlocksBuilt++;
@@ -73,11 +69,18 @@ public class Queen : Agent
                 }
 
                 BuildTimer = 0;
-
-            } else
+            } else if (DigTimer > 4.5)
             {
+                if (GetBlockTypeBelow() != "Nest")
+                    Dig();
+            }
+            else 
+            {
+                moveTimer += Time.deltaTime;
                 BuildTimer += Time.deltaTime;
             }
+
+            // the queen will never share health, because she is the queen and deserves simps
 
 
 
