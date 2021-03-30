@@ -1,50 +1,22 @@
-# Assignment 3: Antymology
+# CPSC 565 Assignment 3: Antymology
 
-As we\'ve seen in class, ants exhibit very interesting behaviour. From finding the shortest path to building bridges out of bodies ants have evolved to produce complex emergents from very simple rules. For your assignment you will need to create a species of ant which is capable of generating the biggest nest possible.
+This project takes a somewhat simple minecraft-esque environment and adds ants to the mix. 
 
-I have already created the base code you will use for the assignment. Currently the simulation environment is devoid of any dynamic behaviour and exists only as a landscape. You will need to extend the functionality of what I have written in order to produce \"intelligent\" behaviour. Absolutely no behaviour has been added to this project so you are free to implement whatever you want however you want, with only a few stipulations.
+The goal of this project was to create emergent behaviour through the modelling of the ants - specifically with the intention to maximize 'nest production'.
 
-![Ants](Images/Ants.gif)
+Every ant is considered a sort of worker ant, with a single queen ant in the population. 
 
-## Goal
+Each worker is controlled by a neural network that is trained through neuro-evolution (ie: each ant has a neural network, which is trained by a genetic algorithm). 
 
-The only goal you have is to implement some sort of evolutionary algorithm which maximises nest production. You are in complete control over how your ants breed, make choices, and interact with the environment. Because of this, your mark is primarily going to be reflective of how much effort it looks like you put into this vs. how well your agents maximise their fitness (I.e. don\'t worry about having your ants perform exceptionally well).
+The queen ant is a special type of ant, and is the only ant with the ability to place nest blocks. 
 
-## Current Code
-My code is currently broken into 4 components (found within the components folder)
-1. Agents
-2. Configuration
-3. Terrain
-4. UI
+You may simply open up this project in Unity to see it in action. 
 
-You are able to experience it generating an environment by simply running the project once you have loaded it into unity.
+### Ants
 
-### Agents
-The agents component is currently empty. This is where you will place most of your code. The component will be responsible for moving ants, digging, making nests, etc. You will need to come up with a system for how ants interact within the world, as well as how you will be maximising their fitness (see ant behaviour).
+The ants were required to have the following behaviours, from DaviesCooper (our prof's) repo: 
 
-### Configuration
-This is the component responsible for configuring the system. For example, currently there exists a file called ConfigurationManager which holds the values responsible for world generation such as the dimensions of the world, and the seed used in the RNG. As you build parameters into your system, you will need to place your necesarry configuration components in here.
-
-### Terrain
-The terrain memory, generation, and display all take place in the terrain component. The main WorldManager is responsible for generating everything.
-
-### UI
-This is where all UI components will go. Currently only a fly camera, and a camera-controlled map editor are present here.
-
-## Requirements
-
-### Admin
- - This assignment must be implemented using Unity 2019or above (see appendix)
- - Your code must be maintained in a github (or other similar git environment) repository.
- - You must fork from this repo to start your project.
- - You will be marked for your commit messages as well as the frequency with which you commit. Committing everything at once will receive a letter grade reduction (A →A-).
- - All project documentation should be provided via a Readme.md file found in your repo. Write it as if I was an employer who wanted to see a portfolio of your work. By that I mean write it as if I have no idea what the project is. Describe it in detail. Include images/gifs.
-
-### Interface
-- The camera must be usable in play-mode so as to allow the grader the ability to look at what is happening in the scene.
-- You must create a basic UI which shows the current number of nest blocks in the world
-
-### Ant Behaviour
+##### Ant Behaviour
 - Ants must have some measure of health. When an ants health hits 0, it dies and needs to be removed from the simulation
 - Every timestep, you must reduce each ants health by some fixed amount
 - Ants can refill their health by consuming Mulch blocks. To consume a mulch block, and ant must be directly ontop of a mulch block. After consuming, the mulch block must be removed from the world.
@@ -58,14 +30,73 @@ This is where all UI components will go. Currently only a fly camera, and a came
 - Producing a single nest block must cost the queen 1/3rd of her maximum health.
 - No new ants can be created during each evaluation phase (you are allowed to create as many ants as you need for each new generation though).
 
-## Tips
-Initially you should first come up with some mechanism which each ant uses to interact with the environment. For the beginning phases your ants should behave completely randomly, at least until you have gotten it so that your ants don't break the pre-defined behaviour above.
+I did modify the health sharing to work if the ants were in close proximity as opposed to only having them share health on the same block to make life a bit easier. 
 
-Once you have the interaction mechanism nailed down, begin thinking about how you will get your ants to change over time. One approach might be to use a neural network to dictate ant behaviour
+#### Approach to the problem
 
-https://youtu.be/zIkBYwdkuTk
+The neural network of each ant takes in a bit of information about the ant, and attempts to determine what the best action for the ant to perform at each tick is. 
 
-another approach might be to use phermone deposits (I\'ve commented how you could achieve this in the code for the AirBlock) and have your genes be what action should be taken for different phermone concentrations, etc.
+### The mind of an ant
 
-## Submission
-Export your project as a Unity package file. Submit your Unity package file and additional document using the D2L system under the corresponding entry in Assessments/Dropbox. Inlude in the message a link to your git repo where you did your work.
+I should mention that the neural network code I used was mostly based off of: 
+
+https://towardsdatascience.com/building-a-neural-network-framework-in-c-16ef56ce1fef
+
+A simple evolution scheme was used: keep the fittest neural networks, copy the fittest half over to the weakest half, and mutate them. 
+
+Note that the evolutional process / the generation reset (which happens to also regenerate the environment) was triggered by the queens death. 
+
+##### Variations of the neural network inputs
+
+The first approach I took to try and maximize nest production was to encode:
+
+1. the 5x5 area around the ant (with the ant at the center)
+2. the direction of the queen
+4. the health of the queen
+5. the direction of the nearest ant
+6. the health of the nearest ant
+
+Surely with enough time training, the ants would learn the relationships of all the data, right? In my dreams. 
+
+As it turns out, this made it incredibly hard for the ants to learn! I left them to train overnight, but they made very little progress. 
+
+The second approach I cut out a huge chunk of the data - taking out all of the encoded world data (leaving me with points 2 to 5), and adding another piece of data in place of it: the type of block the ant was currently on. 
+
+The transition from the first approach to the second was slow, since I was also trying to play with the fitness function...
+
+#### Variations of the fitness function
+
+To build a nest, the queen ant must stay alive, and so the ants are motivated by their fitness functions to essentially "funnel" their health into the queen. 
+
+The very first approach I took to this was maximizing the time the ants stayed alive. This encouraged them to just dig down as far as possible, and had nothing to do with the queen! (At that point, I had not even implemented the queen yet). 
+
+I figured this was making the learning curve way too steep, so I made the fitness functions a bit more rigorous - recreating it with the following criteria:
+
+- How many nest blocks the queen ant built in that generation
+- How many times an specific ant shared health with the queen
+
+This was making the overall fitness really dependent on the queen, so I scrapped the first item above, making my new criteria:
+
+- The number of times an ant shared health with the queen
+- The number of times the ants moved towards the queen (in hopes that this would teach my young ants about direction)
+
+The final little bit of critera I added into the fitness calculation was to void the fitness altogether if an ant removed a nest block: this was done to discourage ants from destroying what I had been trying to get them to achieve!
+
+## Some emergent behaviours my ants did produce
+
+I should add as a note here that my ants never really got that smart - I don't have a 3080 and didn't have the time to port the code into a more trainable environment. 
+
+One big pattern that emerged across the generations, though, is that the ants usually all defaulted to the same strategy: 
+
+- Find a 'good' direction - the ants would usually choose one direction that they would inevitably all proceed over.  
+- In some cases, the ants would stop just before reaching the nest / the queen (as pictured). This was especially common when the queen had started building the nest near a wall in the direction that the ants had started to mostly move in. 
+- In earlier stages, the ants would move in a mix of directions - sometimes moving towards the queen! (this was mostly a coincidence of the queen being in the right place, though) but this behaviour was eventually filtered out as there seemed to be a more agreed upon 'good' direction.
+
+### Conclusion
+
+I would like to see someday if my ants could eventually build the brain power to come up with better strategies and actually start to realize how to move in the direction of the queen, but I also don't want to melt my CPU. 
+
+Overall, this assignment was a lot of fun and I'm glad I had the oppourtunity to get my hands dirty with neural networks like this - especially given that my groups topical presentation was based off of neuro-evolution. Just a bit sad that my ants couldn't quite see the light. 
+
+Thanks for reading!
+
