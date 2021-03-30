@@ -97,7 +97,9 @@ namespace Antymology.Terrain
         #region simp for the queen
 
         // this is ugly I know
-        private int[] layers = new int[3] {136, 12, 8 };
+        private int[] layers = new int[3] {12, 10, 8 };
+
+        //private int[] layers = new int[3] {  }
 
         [Range(0.0001f, 1f)] public float MutationChance = 0.01f;
 
@@ -108,6 +110,8 @@ namespace Antymology.Terrain
         public List<NeuralNetwork> networks;
         public List<Agent> ants = null;
 
+        public NeuralNetwork qNetwork; // refers to the queen's neural network
+
         public void InitNetworks()
         {
             networks = new List<NeuralNetwork>();
@@ -117,6 +121,7 @@ namespace Antymology.Terrain
                 //net.Load("Assets/Save.txt");//on start load the network save
                 networks.Add(net);
             }
+            //NeuralNetwork qNet = new NeuralNetwork(queenLayers);
         }
 
 

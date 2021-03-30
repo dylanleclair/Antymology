@@ -23,7 +23,7 @@ public class Agent : MonoBehaviour
 
     private AbstractBlock air = new AirBlock();
 
-    private float[] input = new float[125 + 11];
+    private float[] input = new float[11];
 
     private int HealthShared = 0;
 
@@ -70,24 +70,7 @@ public class Agent : MonoBehaviour
             int y = Mathf.RoundToInt(position.y + 1);
             int z = Mathf.RoundToInt(position.z);
 
-            // we are going to get the 3d terrain around the ant :) 
-            int[,,] blocks = new int[5,5,5];
-            for (int i = 0; i< 5; i++)
-            {
-                int xblock = x - 2 + i;
-                for (int j = 0; j < 5; j++)
-                {
-                    int yblock = y - 2 + j;
-                    for (int k = 0; k<5; k++)
-                    {
-                        int zblock = z - 2 + k;
-                        blocks[i, j, k] = GetBlockTypeInt(WorldManager.Instance.GetBlock(xblock, yblock, zblock).BlockType);
-                    }
-                }
-            }
 
-            // flatten blocks!
-            int[] blocks1d = Flattener.Flatten<int>(blocks);
             //Debug.Log("LENGTH OF BLOCK BUFFER: " + blocks1d.Length);
             // get the other values
 
@@ -135,11 +118,11 @@ public class Agent : MonoBehaviour
 
             // combine into input
 
-            int[] secondary = { queenX, queenY, queenZ, healthQueen, distanceFromQueen, closestX, closestY, closestZ, healthClosestAnt, distanceAnt, Health };
+            int[] secondary = { queenX, queenY, queenZ, healthQueen, distanceFromQueen, closestX, closestY, closestZ, healthClosestAnt, distanceAnt, Health,GetBlockTypeInt(GetBlockTypeBelow()) };
             //Debug.Log("Length of other variables " +secondary.Length);
             // get output from the neural network
 
-            input = System.Array.ConvertAll(blocks1d.Concatenate(secondary), l=> (float)l);
+            input = System.Array.ConvertAll(secondary, l=> (float)l);
             //Debug.Log("Concatenated length: "+ input.Length);
             float[] output = network.FeedForward(input); // call to network to feed forward
 
@@ -235,7 +218,7 @@ public class Agent : MonoBehaviour
     /// <summary>
     /// Causes the ant to dig
     /// </summary>
-    void Dig()
+    public void Dig()
     {
         string typeToDig = GetBlockTypeBelow();
         // do not "dig" mulch blocks
@@ -422,7 +405,7 @@ public class Agent : MonoBehaviour
         } else
         {
             Agent closestAnt = null;
-            float distance = 10000000;
+            float distance = System.Int32.MaxValue;
             // find the closest ant
             List<Agent> ants = WorldManager.Instance.ants;
             for (int i = 0; i< ants.Count; i++)
@@ -473,11 +456,6 @@ public class Agent : MonoBehaviour
     // this is the fitness function!
     public void UpdateFitness()
     {
-
-        Vector3 distanceFromQueen = WorldManager.Instance.queen.GetCurrentBlockPosition();
-
-        int dist = Mathf.RoundToInt(Vector3.Distance(distanceFromQueen, GetCurrentBlockPosition()));
-
         network.fitness = MovedTowardsQueen + HealthShared; //updates fitness of network for sorting
     }
 }
